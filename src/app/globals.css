@@ -1,0 +1,337 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   Global Styles for AI Resume Analyzer
+   ============================================================================ */
+
+@layer base {
+  :root {
+    --background: 10 10 15;
+    --foreground: 250 250 250;
+  }
+
+  html {
+    scroll-behavior: smooth !important ;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-background-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border-accent rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-foreground-subtle;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-accent-primary/30 text-foreground;
+  }
+}
+
+@layer components {
+  /* Card styles */
+  .card {
+    @apply bg-background-secondary border border-border rounded-xl p-6;
+    @apply transition-all duration-300;
+  }
+
+  .card-hover {
+    @apply hover:border-border-accent hover:shadow-glow;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5;
+    @apply font-medium text-sm rounded-lg transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-accent-primary to-accent-secondary text-white;
+    @apply hover:opacity-90 hover:shadow-glow;
+  }
+
+  .btn-secondary {
+    @apply btn bg-background-tertiary text-foreground border border-border;
+    @apply hover:bg-background-elevated hover:border-border-accent;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-foreground-muted;
+    @apply hover:bg-background-tertiary hover:text-foreground;
+  }
+
+  .btn-danger {
+    @apply btn bg-accent-danger/10 text-accent-danger border border-accent-danger/30;
+    @apply hover:bg-accent-danger/20;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-4 py-3 bg-background-tertiary border border-border rounded-lg;
+    @apply text-foreground placeholder:text-foreground-subtle;
+    @apply focus:outline-none focus:border-accent-primary focus:ring-2 focus:ring-accent-primary/20;
+    @apply transition-all duration-200;
+  }
+
+  .input-error {
+    @apply border-accent-danger focus:border-accent-danger focus:ring-accent-danger/20;
+  }
+
+  /* Label styles */
+  .label {
+    @apply block text-sm font-medium text-foreground-muted mb-2;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply badge bg-accent-success/10 text-accent-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-accent-warning/10 text-accent-warning;
+  }
+
+  .badge-danger {
+    @apply badge bg-accent-danger/10 text-accent-danger;
+  }
+
+  .badge-info {
+    @apply badge bg-accent-info/10 text-accent-info;
+  }
+
+  .badge-neutral {
+    @apply badge bg-background-elevated text-foreground-muted;
+  }
+
+  /* Score indicator */
+  .score-circle {
+    @apply relative inline-flex items-center justify-center;
+  }
+
+  .score-circle svg {
+    @apply transform -rotate-90;
+  }
+
+  /* Tooltip */
+  .tooltip {
+    @apply absolute z-50 px-3 py-2 text-sm bg-background-elevated border border-border;
+    @apply rounded-lg shadow-lg text-foreground max-w-xs;
+    @apply animate-fade-in;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    @apply h-2 bg-background-tertiary rounded-full overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full rounded-full transition-all duration-500;
+  }
+
+  /* Divider */
+  .divider {
+    @apply h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  }
+
+  /* Glass effect */
+  .glass {
+    @apply bg-background-secondary/80 backdrop-blur-xl border border-border/50;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-primary via-accent-secondary to-accent-info bg-clip-text text-transparent;
+  }
+
+  /* Shimmer effect for loading */
+  .shimmer {
+    @apply bg-gradient-to-r from-background-tertiary via-background-elevated to-background-tertiary;
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+
+  /* Step indicator */
+  .step-indicator {
+    @apply flex items-center justify-center w-10 h-10 rounded-full;
+    @apply text-sm font-semibold transition-all duration-300;
+  }
+
+  .step-indicator-active {
+    @apply step-indicator bg-gradient-to-r from-accent-primary to-accent-secondary text-white shadow-glow;
+  }
+
+  .step-indicator-completed {
+    @apply step-indicator bg-accent-success text-white;
+  }
+
+  .step-indicator-pending {
+    @apply step-indicator bg-background-tertiary text-foreground-muted border border-border;
+  }
+
+  /* File drop zone */
+  .dropzone {
+    @apply relative border-2 border-dashed border-border rounded-xl;
+    @apply transition-all duration-300 cursor-pointer;
+    @apply hover:border-accent-primary hover:bg-accent-primary/5;
+  }
+
+  .dropzone-active {
+    @apply border-accent-primary bg-accent-primary/10;
+  }
+
+  /* Section header */
+  .section-header {
+    @apply flex items-center gap-3 mb-6;
+  }
+
+  .section-icon {
+    @apply p-2.5 rounded-lg bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10;
+    @apply text-accent-primary;
+  }
+
+  /* Metric card */
+  .metric-card {
+    @apply card flex flex-col items-center justify-center text-center p-6;
+  }
+
+  .metric-value {
+    @apply text-4xl font-bold gradient-text;
+  }
+
+  .metric-label {
+    @apply text-sm text-foreground-muted mt-2;
+  }
+
+  /* List item styles */
+  .list-item {
+    @apply flex items-start gap-3 p-3 rounded-lg transition-colors;
+    @apply hover:bg-background-tertiary;
+  }
+
+  .list-item-icon {
+    @apply flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center;
+  }
+
+  /* Tabs */
+  .tabs {
+    @apply flex gap-1 p-1 bg-background-secondary rounded-lg;
+  }
+
+  .tab {
+    @apply px-4 py-2 text-sm font-medium rounded-md transition-all;
+    @apply text-foreground-muted hover:text-foreground;
+  }
+
+  .tab-active {
+    @apply tab bg-background-tertiary text-foreground;
+  }
+
+  /* Skill tag */
+  .skill-tag {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm;
+    @apply bg-background-tertiary border border-border;
+    @apply transition-all duration-200;
+  }
+
+  .skill-tag-matched {
+    @apply skill-tag bg-accent-success/10 border-accent-success/30 text-accent-success;
+  }
+
+  .skill-tag-missing {
+    @apply skill-tag bg-accent-danger/10 border-accent-danger/30 text-accent-danger;
+  }
+
+  .skill-tag-partial {
+    @apply skill-tag bg-accent-warning/10 border-accent-warning/30 text-accent-warning;
+  }
+}
+
+@layer utilities {
+  /* Animation delays */
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  /* Text balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Gradient border */
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Focus visible ring */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
+
+/* Fonts loading */
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
