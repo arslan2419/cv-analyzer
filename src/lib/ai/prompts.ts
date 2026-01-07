@@ -23,7 +23,7 @@ CRITICAL RULES:
 Your responses should be in valid JSON format when requested.`;
 
 /**
- * Prompt for analyzing resume against job description
+ * Prompt for analyzing resume against job description (COMBINED with ATS analysis to reduce API calls)
  */
 export function getAnalysisPrompt(
   resumeText: string,
@@ -34,7 +34,7 @@ export function getAnalysisPrompt(
     ? `\n\nThe candidate is targeting a ${rolePreset.replace(/-/g, ' ')} role. Weight your analysis accordingly.`
     : '';
 
-  return `Analyze this resume against the job description and provide a comprehensive analysis.
+  return `Analyze this resume against the job description and provide a comprehensive analysis INCLUDING ATS compatibility.
 
 RESUME:
 ${resumeText}
@@ -82,7 +82,23 @@ Provide your analysis in the following JSON format:
   "strengths": ["<strength1>", "<strength2>"],
   "weaknesses": ["<weakness1>", "<weakness2>"],
   "missingSkills": ["<skill1>", "<skill2>"],
-  "suggestions": ["<actionable suggestion1>", "<actionable suggestion2>"]
+  "suggestions": ["<actionable suggestion1>", "<actionable suggestion2>"],
+  "atsAnalysis": {
+    "score": <number 0-100>,
+    "formatScore": <number 0-100>,
+    "keywordScore": <number 0-100>,
+    "structureScore": <number 0-100>,
+    "readabilityScore": <number 0-100>,
+    "issues": [
+      {
+        "type": "<format|content|structure|keyword>",
+        "severity": "<critical|warning|suggestion>",
+        "message": "<clear description of the issue>",
+        "location": "<where in the resume>",
+        "fix": "<specific fix recommendation>"
+      }
+    ]
+  }
 }
 
 IMPORTANT:
@@ -90,7 +106,8 @@ IMPORTANT:
 - Every skill match must reference actual content from the resume
 - Be specific about where improvements should be made
 - Do not suggest adding skills the candidate doesn't have
-- Focus on presentation and phrasing improvements`;
+- Focus on presentation and phrasing improvements
+- For ATS analysis: check format issues, section naming, keyword optimization, structure, and readability`;
 }
 
 /**

@@ -55,22 +55,32 @@ export async function POST(request: NextRequest): Promise<NextResponse<AnalysisR
     
     // Check for specific Gemini errors
     if (error instanceof Error) {
-      if (error.message.includes('API key') || error.message.includes('API_KEY')) {
+      const errorMessage = error.message?.toLowerCase() || '';
+      
+      if (errorMessage.includes('api key') || errorMessage.includes('api_key') || errorMessage.includes('invalid')) {
         return NextResponse.json(
           { success: false, error: 'Invalid API key. Please check your Gemini API key configuration.' },
           { status: 401 }
         );
       }
-      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate')) {
+      
+      if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
         return NextResponse.json(
-          { success: false, error: 'Rate limit exceeded. Please try again in a few moments.' },
+          { success: false, error: 'Rate limit exceeded. The free tier allows 15 requests per minute. Please wait a moment and try again.' },
           { status: 429 }
+        );
+      }
+      
+      if (errorMessage.includes('json') || errorMessage.includes('parse')) {
+        return NextResponse.json(
+          { success: false, error: 'Failed to parse AI response. Please try again.' },
+          { status: 500 }
         );
       }
     }
 
     return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred during analysis.' },
+      { success: false, error: 'An unexpected error occurred during analysis. Please try again.' },
       { status: 500 }
     );
   }

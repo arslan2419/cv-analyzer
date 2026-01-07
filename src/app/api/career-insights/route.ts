@@ -60,22 +60,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<CareerIns
     console.error('Career insights error:', error);
     
     if (error instanceof Error) {
-      if (error.message.includes('API key') || error.message.includes('API_KEY')) {
+      const errorMessage = error.message?.toLowerCase() || '';
+      
+      if (errorMessage.includes('api key') || errorMessage.includes('api_key') || errorMessage.includes('invalid')) {
         return NextResponse.json(
           { success: false, error: 'Invalid API key configuration.' },
           { status: 401 }
         );
       }
-      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate')) {
+      if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
         return NextResponse.json(
-          { success: false, error: 'Rate limit exceeded. Please try again shortly.' },
+          { success: false, error: 'Rate limit exceeded. The free tier allows 15 requests per minute. Please wait a moment and try again.' },
           { status: 429 }
         );
       }
     }
 
     return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred while generating career insights.' },
+      { success: false, error: 'An unexpected error occurred while generating career insights. Please try again.' },
       { status: 500 }
     );
   }

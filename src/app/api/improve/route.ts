@@ -45,15 +45,20 @@ export async function POST(request: NextRequest): Promise<NextResponse<Improveme
       );
     }
 
-    // Generate improvements for each section
-    const improvements = await Promise.all(
-      sections.map(async ({ section, text }) => {
-        if (!text || text.trim().length < 10) {
-          throw new Error(`Section "${section}" has insufficient content for improvement.`);
-        }
-        return improveResumeSection(text, section, tone, keywords, targetRole);
-      })
-    );
+    // Generate improvements for each section sequentially to avoid rate limits
+    const improvements = [];
+    for (const { section, text } of sections) {
+      if (!text || text.trim().length < 10) {
+        throw new Error(`Section "${section}" has insufficient content for improvement.`);
+      }
+      const improvement = await improveResumeSection(text, section, tone, keywords, targetRole);
+      improvements.push(improvement);
+      
+      // Small delay between requests to respect rate limits
+      if (sections.length > 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -65,28 +70,30 @@ export async function POST(request: NextRequest): Promise<NextResponse<Improveme
     console.error('Improvement error:', error);
     
     if (error instanceof Error) {
+      const errorMessage = error.message?.toLowerCase() || '';
+      
       if (error.message.includes('insufficient content')) {
         return NextResponse.json(
           { success: false, error: error.message },
           { status: 400 }
         );
       }
-      if (error.message.includes('API key') || error.message.includes('API_KEY')) {
+      if (errorMessage.includes('api key') || errorMessage.includes('api_key') || errorMessage.includes('invalid')) {
         return NextResponse.json(
           { success: false, error: 'Invalid API key configuration.' },
           { status: 401 }
         );
       }
-      if (error.message.includes('429') || error.message.includes('quota') || error.message.includes('rate')) {
+      if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
         return NextResponse.json(
-          { success: false, error: 'Rate limit exceeded. Please try again shortly.' },
+          { success: false, error: 'Rate limit exceeded. The free tier allows 15 requests per minute. Please wait a moment and try again.' },
           { status: 429 }
         );
       }
     }
 
     return NextResponse.json(
-      { success: false, error: 'An unexpected error occurred while generating improvements.' },
+      { success: false, error: 'An unexpected error occurred while generating improvements. Please try again.' },
       { status: 500 }
     );
   }

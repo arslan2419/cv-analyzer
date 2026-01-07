@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
 import { parseResumeText } from '@/lib/parsers';
-import { extractResumeWithAI } from '@/lib/ai';
 import type { ParseResumeResponse } from '@/types';
 
 export const runtime = 'nodejs';
@@ -16,7 +15,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseResu
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
-    const useAI = formData.get('useAI') === 'true';
 
     if (!file) {
       return NextResponse.json(
@@ -80,36 +78,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ParseResu
       );
     }
 
-    // Parse the resume text
-    let parsedResume = parseResumeText(rawText, file.name, fileType);
-
-    // If AI extraction is enabled and basic parsing missed key info, use AI
-    if (useAI && process.env.GEMINI_API_KEY) {
-      const hasMinimalData = 
-        parsedResume.contact.name &&
-        parsedResume.experience.length > 0 &&
-        parsedResume.skills.length > 0;
-
-      if (!hasMinimalData) {
-        try {
-          const aiExtracted = await extractResumeWithAI(rawText);
-          parsedResume = {
-            ...parsedResume,
-            contact: aiExtracted.contact || parsedResume.contact,
-            summary: aiExtracted.summary || parsedResume.summary,
-            skills: aiExtracted.skills.length > 0 ? aiExtracted.skills : parsedResume.skills,
-            experience: aiExtracted.experience.length > 0 ? aiExtracted.experience : parsedResume.experience,
-            education: aiExtracted.education.length > 0 ? aiExtracted.education : parsedResume.education,
-            projects: aiExtracted.projects.length > 0 ? aiExtracted.projects : parsedResume.projects,
-            certifications: aiExtracted.certifications.length > 0 ? aiExtracted.certifications : parsedResume.certifications,
-            languages: aiExtracted.languages || parsedResume.languages,
-          };
-        } catch (aiError) {
-          console.error('AI extraction failed, using basic parsing:', aiError);
-          // Continue with basic parsing results
-        }
-      }
-    }
+    // Parse the resume text using basic parsing
+    // AI extraction is skipped to avoid rate limits - the main analysis will use AI
+    const parsedResume = parseResumeText(rawText, file.name, fileType);
 
     return NextResponse.json({
       success: true,

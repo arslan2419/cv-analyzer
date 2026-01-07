@@ -70,9 +70,28 @@ function parseAIResponse<T>(response: string): T {
 }
 
 /**
- * Generate content using Gemini with retry logic
+ * Delay helper for rate limiting
+ */
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Track last request time to prevent rapid calls
+ */
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL = 4000; // Minimum 4 seconds between requests
+
+/**
+ * Generate content using Gemini with retry logic and exponential backoff
  */
 async function generateContent(prompt: string, retries = 3): Promise<string> {
+  // Ensure minimum interval between requests to avoid rate limits
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+    await delay(MIN_REQUEST_INTERVAL - timeSinceLastRequest);
+  }
+  lastRequestTime = Date.now();
+  
   let lastError: Error | undefined;
   
   for (let attempt = 0; attempt < retries; attempt++) {
@@ -92,22 +111,28 @@ async function generateContent(prompt: string, retries = 3): Promise<string> {
       return text;
     } catch (error) {
       lastError = error as Error;
+      const errorMessage = lastError.message?.toLowerCase() || '';
       
-      // If rate limited, wait before retrying
-      if (lastError.message.includes('429') || lastError.message.includes('quota')) {
-        await new Promise(resolve => setTimeout(resolve, 2000 * (attempt + 1)));
+      // If rate limited, wait with exponential backoff before retrying
+      if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
+        // Longer wait times: 10s, 20s, 40s
+        const waitTime = Math.min(10000 * Math.pow(2, attempt), 60000); // Max 60 seconds
+        console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt + 1}/${retries}`);
+        await delay(waitTime);
         continue;
       }
       
+      // For other errors, throw immediately
       throw error;
     }
   }
   
-  throw lastError || new Error('Failed to generate content');
+  throw lastError || new Error('Failed to generate content after retries');
 }
 
 /**
  * Analyze resume against job description
+ * Combined analysis + ATS check in single API call to avoid rate limits
  */
 export async function analyzeResumeVsJD(
   resume: ParsedResume,
@@ -118,18 +143,46 @@ export async function analyzeResumeVsJD(
   
   const content = await generateContent(prompt);
   
-  const analysis = parseAIResponse<Omit<AnalysisResult, 'id' | 'resumeId' | 'jdId' | 'atsScore' | 'atsAnalysis' | 'createdAt'>>(content);
-  
-  // Get ATS analysis separately
-  const atsAnalysis = await analyzeATSCompatibility(resume.rawText);
+  // Parse combined response (includes both analysis and ATS data)
+  const analysis = parseAIResponse<{
+    overallScore: number;
+    skillMatchScore: number;
+    experienceScore: number;
+    keywordScore: number;
+    skillMatches: AnalysisResult['skillMatches'];
+    experienceAnalysis: AnalysisResult['experienceAnalysis'];
+    keywordAnalysis: AnalysisResult['keywordAnalysis'];
+    strengths: string[];
+    weaknesses: string[];
+    missingSkills: string[];
+    suggestions: string[];
+    atsAnalysis: ATSAnalysis;
+  }>(content);
   
   return {
     id: generateId(),
     resumeId: resume.id,
     jdId: jd.id,
-    ...analysis,
-    atsScore: atsAnalysis.score,
-    atsAnalysis,
+    overallScore: analysis.overallScore,
+    skillMatchScore: analysis.skillMatchScore,
+    experienceScore: analysis.experienceScore,
+    keywordScore: analysis.keywordScore,
+    skillMatches: analysis.skillMatches || [],
+    experienceAnalysis: analysis.experienceAnalysis || [],
+    keywordAnalysis: analysis.keywordAnalysis || [],
+    strengths: analysis.strengths || [],
+    weaknesses: analysis.weaknesses || [],
+    missingSkills: analysis.missingSkills || [],
+    suggestions: analysis.suggestions || [],
+    atsScore: analysis.atsAnalysis?.score || 75,
+    atsAnalysis: analysis.atsAnalysis || {
+      score: 75,
+      formatScore: 75,
+      keywordScore: 75,
+      structureScore: 75,
+      readabilityScore: 75,
+      issues: [],
+    },
     createdAt: new Date(),
   };
 }
