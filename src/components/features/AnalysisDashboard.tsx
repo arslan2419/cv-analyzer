@@ -22,14 +22,6 @@ export function AnalysisDashboard() {
   const [hasStartedAnalysis, setHasStartedAnalysis] = useState(false);
   const analysisAttemptRef = useRef(false);
 
-  useEffect(() => {
-    // Only run analysis once when component mounts with valid data
-    if (resume && jd && !analysis && !hasStartedAnalysis && !analysisAttemptRef.current) {
-      analysisAttemptRef.current = true;
-      runAnalysis();
-    }
-  }, [resume, jd, analysis, hasStartedAnalysis]);
-
   const runAnalysis = useCallback(async () => {
     if (!resume || !jd) return;
 
@@ -57,6 +49,14 @@ export function AnalysisDashboard() {
       setIsAnalyzing(false);
     }
   }, [resume, jd, setAnalysis, setError, setIsAnalyzing]);
+
+  useEffect(() => {
+    // Only run analysis once when component mounts with valid data
+    if (resume && jd && !analysis && !hasStartedAnalysis && !analysisAttemptRef.current) {
+      analysisAttemptRef.current = true;
+      runAnalysis();
+    }
+  }, [resume, jd, analysis, hasStartedAnalysis, runAnalysis]);
 
   const handleRetry = () => {
     analysisAttemptRef.current = false;
@@ -406,7 +406,7 @@ function KeywordAnalysis({ analysis }: { analysis: AnalysisResult }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-foreground-muted">
-        These keywords are important for ATS matching. Green means you have them, red means they're missing.
+        These keywords are important for ATS matching. Green means you have them, red means they&apos;re missing.
       </p>
       
       <div className="divide-y divide-border">
