@@ -1,8 +1,8 @@
 // ============================================================================
-// AI Analysis Engine using Google Gemini (FREE)
+// AI Analysis Engine using Groq (Fast LLM Inference)
 // ============================================================================
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import type {
   AnalysisResult,
   ATSAnalysis,
@@ -26,46 +26,72 @@ import {
 } from './prompts';
 import { generateId } from '../utils';
 
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
-// Use Gemini 1.5 Flash (free tier friendly, fast, and capable)
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-flash',
-  systemInstruction: SYSTEM_PROMPT,
+// Initialize Groq client
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY || '',
 });
 
-// Generation config for consistent outputs
-const generationConfig = {
-  temperature: 0.3,
-  topK: 40,
-  topP: 0.95,
-  maxOutputTokens: 8192,
-};
+// Use Llama 3.3 70B - powerful and fast model available on Groq
+const MODEL = 'llama-3.3-70b-versatile';
+
+/**
+ * Clean input text by removing null characters and other problematic characters
+ */
+function cleanInputText(text: string): string {
+  return text
+    .replace(/\u0000/g, '') // Remove null characters
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+    .trim();
+}
 
 /**
  * Parse JSON from AI response, handling potential formatting issues
  */
 function parseAIResponse<T>(response: string): T {
-  // Try to extract JSON from the response
-  const jsonMatch = response.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('No valid JSON found in AI response');
+  // Log response for debugging
+  console.log('[Groq] Raw response preview:', response.substring(0, 500));
+  
+  // Try to extract JSON from markdown code blocks first
+  const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+  let jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : response;
+  
+  // If no code block, try to find JSON object
+  if (!codeBlockMatch) {
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('[Groq] No JSON found in response:', response);
+      throw new Error('No valid JSON found in AI response');
+    }
+    jsonStr = jsonMatch[0];
   }
   
+  // Clean the JSON string
+  jsonStr = jsonStr
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+    .trim();
+  
   try {
-    return JSON.parse(jsonMatch[0]) as T;
-  } catch {
-    // Try to fix common JSON issues
-    let fixed = jsonMatch[0]
-      .replace(/,\s*}/g, '}')
-      .replace(/,\s*]/g, ']')
-      .replace(/'/g, '"')
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '\\r')
-      .replace(/\t/g, '\\t');
+    return JSON.parse(jsonStr) as T;
+  } catch (firstError) {
+    console.log('[Groq] First parse attempt failed, trying fixes...');
     
-    return JSON.parse(fixed) as T;
+    try {
+      // Try to fix common JSON issues
+      let fixed = jsonStr
+        // Fix trailing commas
+        .replace(/,(\s*[}\]])/g, '$1')
+        // Fix unescaped newlines in strings (between quotes)
+        .replace(/(?<=":[ ]*"[^"]*)\n(?=[^"]*")/g, '\\n')
+        // Fix single quotes to double quotes (careful with apostrophes)
+        .replace(/(?<=[\[{,]\s*)'([^']+)'(?=\s*:)/g, '"$1"')
+        // Remove any BOM
+        .replace(/^\uFEFF/, '');
+      
+      return JSON.parse(fixed) as T;
+    } catch (secondError) {
+      console.error('[Groq] JSON parse failed. Original:', jsonStr.substring(0, 200));
+      throw new Error(`Failed to parse AI response as JSON: ${(firstError as Error).message}`);
+    }
   }
 }
 
@@ -78,13 +104,16 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  * Track last request time to prevent rapid calls
  */
 let lastRequestTime = 0;
-const MIN_REQUEST_INTERVAL = 4000; // Minimum 4 seconds between requests
+const MIN_REQUEST_INTERVAL = 500; // Groq is much faster, can handle more requests
 
 /**
- * Generate content using Gemini with retry logic and exponential backoff
+ * Generate content using Groq with retry logic and exponential backoff
  */
 async function generateContent(prompt: string, retries = 3): Promise<string> {
-  // Ensure minimum interval between requests to avoid rate limits
+  // Clean the prompt to remove problematic characters
+  const cleanedPrompt = cleanInputText(prompt);
+  
+  // Ensure minimum interval between requests
   const now = Date.now();
   const timeSinceLastRequest = now - lastRequestTime;
   if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
@@ -96,34 +125,70 @@ async function generateContent(prompt: string, retries = 3): Promise<string> {
   
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig,
+      console.log(`[Groq] Attempt ${attempt + 1}/${retries} - Sending request to ${MODEL}...`);
+      
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: SYSTEM_PROMPT + '\n\nIMPORTANT: Always respond with valid JSON only. No markdown, no explanations, just the JSON object.',
+          },
+          {
+            role: 'user',
+            content: cleanedPrompt,
+          },
+        ],
+        model: MODEL,
+        temperature: 0.3,
+        max_tokens: 8192,
+        top_p: 0.95,
+        response_format: { type: 'json_object' },
       });
       
-      const response = result.response;
-      const text = response.text();
+      const text = chatCompletion.choices[0]?.message?.content;
       
       if (!text) {
-        throw new Error('Empty response from Gemini');
+        throw new Error('Empty response from Groq');
       }
       
+      console.log(`[Groq] Success! Response length: ${text.length} chars`);
       return text;
-    } catch (error) {
+    } catch (error: unknown) {
       lastError = error as Error;
-      const errorMessage = lastError.message?.toLowerCase() || '';
       
-      // If rate limited, wait with exponential backoff before retrying
-      if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
-        // Longer wait times: 10s, 20s, 40s
-        const waitTime = Math.min(10000 * Math.pow(2, attempt), 60000); // Max 60 seconds
-        console.log(`Rate limited. Waiting ${waitTime}ms before retry ${attempt + 1}/${retries}`);
+      // Log full error details for debugging
+      console.error('[Groq] Error details:', {
+        name: lastError?.name,
+        message: lastError?.message,
+        status: (error as { status?: number })?.status,
+        statusText: (error as { statusText?: string })?.statusText,
+      });
+      
+      const errorMessage = lastError?.message?.toLowerCase() || '';
+      const errorString = String(error).toLowerCase();
+      
+      // Check various rate limit indicators
+      const isRateLimited = 
+        errorMessage.includes('429') || 
+        errorMessage.includes('quota') || 
+        errorMessage.includes('rate') || 
+        errorMessage.includes('too many requests') ||
+        errorString.includes('429');
+      
+      if (isRateLimited) {
+        // Wait time: 5s, 10s, 20s
+        const waitTime = Math.min(5000 * Math.pow(2, attempt), 30000);
+        console.log(`[Groq] Rate limited. Waiting ${waitTime / 1000}s before retry...`);
         await delay(waitTime);
         continue;
       }
       
-      // For other errors, throw immediately
-      throw error;
+      // For other errors, throw immediately with more context
+      const enhancedError = new Error(
+        `Groq API Error: ${lastError?.message || 'Unknown error'}. ` +
+        `Check console for details. Make sure your GROQ_API_KEY is valid.`
+      );
+      throw enhancedError;
     }
   }
   

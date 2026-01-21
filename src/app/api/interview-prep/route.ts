@@ -19,9 +19,9 @@ interface InterviewPrepResponse {
 export async function POST(request: NextRequest): Promise<NextResponse<InterviewPrepResponse>> {
   try {
     // Check for API key
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'AI service not configured. Please add GEMINI_API_KEY to environment variables. Get a free key at https://aistudio.google.com/apikey' },
+        { success: false, error: 'AI service not configured. Please add GROQ_API_KEY to environment variables. Get a free key at https://console.groq.com/keys' },
         { status: 500 }
       );
     }

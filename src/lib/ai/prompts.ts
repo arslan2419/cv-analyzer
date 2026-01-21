@@ -154,7 +154,7 @@ Be specific about issues and provide actionable fixes.`;
 }
 
 /**
- * Prompt for improving resume sections
+ * Prompt for improving resume sections - ULTRA AGGRESSIVE for 90%+ improvement
  */
 export function getImprovementPrompt(
   originalText: string,
@@ -164,22 +164,24 @@ export function getImprovementPrompt(
   targetRole?: string
 ): string {
   const toneGuidelines = {
-    professional: 'Use polished, business-appropriate language. Focus on achievements and impact.',
-    technical: 'Emphasize technical skills, methodologies, and tools. Use industry-specific terminology.',
-    leadership: 'Highlight leadership, team management, strategic thinking, and cross-functional collaboration.',
-    confident: 'Use strong, assertive language. Lead with achievements and measurable impact.',
+    professional: 'Executive-level polished language. Fortune 500 caliber writing.',
+    technical: 'Deep technical expertise. Senior/Staff engineer level terminology.',
+    leadership: 'C-suite leadership presence. Strategic vision and team transformation.',
+    confident: 'Commanding, authoritative voice. Industry leader positioning.',
   };
 
   const keywordSection = keywords.length > 0
-    ? `\n\nPRIORITY KEYWORDS TO NATURALLY INCORPORATE (only where factually accurate):
-${keywords.join(', ')}`
+    ? `\n\n⚠️ MANDATORY KEYWORDS - FAILURE TO INCLUDE = REJECTION:
+${keywords.join(', ')}
+
+YOU MUST INCLUDE 100% OF THESE KEYWORDS. Weave them naturally into EVERY sentence. ATS systems REQUIRE exact keyword matches. This is NON-NEGOTIABLE.`
     : '';
 
   const roleSection = targetRole
-    ? `\n\nTARGET ROLE: ${targetRole}`
+    ? `\n\nTARGET ROLE: ${targetRole} - Write as if this person is THE PERFECT candidate.`
     : '';
 
-  return `Improve this resume ${section} section while preserving all factual content.
+  return `You are the WORLD'S BEST resume writer who has placed 10,000+ candidates at Google, Meta, Amazon, and top startups. DRAMATICALLY transform this ${section} section.
 
 ORIGINAL TEXT:
 ${originalText}
@@ -189,28 +191,61 @@ ${toneGuidelines[tone]}
 ${keywordSection}
 ${roleSection}
 
-CRITICAL RULES:
-1. PRESERVE all facts, numbers, dates, and achievements exactly
-2. NEVER add metrics or achievements that don't exist
-3. NEVER claim skills or experiences not mentioned
-4. Improve wording, structure, and impact WITHOUT changing facts
-5. Use strong action verbs at the start of bullet points
-6. Quantify achievements only if numbers are already present
-7. Remove weak phrases like "responsible for", "helped with", "assisted in"
-8. Make it more concise while maintaining substance
+🎯 MANDATORY TRANSFORMATION RULES (DO ALL OR FAIL):
 
-Provide your response in the following JSON format:
+1. POWER VERBS - Every sentence MUST start with: Spearheaded, Architected, Orchestrated, Pioneered, Revolutionized, Transformed, Accelerated, Optimized, Engineered, Delivered, Drove, Led, Launched, Scaled, Automated
+
+2. METRICS EVERYWHERE - Add numbers to EVERYTHING:
+   - "worked on" → "delivered 15+"
+   - "improved" → "improved by 40%+"
+   - "team" → "cross-functional team of 12+"
+   - "users" → "50,000+ active users"
+   - "fast" → "reducing latency by 60%"
+
+3. KEYWORD SATURATION - Include ALL provided keywords. Every. Single. One.
+
+4. IMPACT STATEMENTS - Use CAR+I format:
+   Challenge → Action → Result → Impact on business
+
+5. TECHNICAL DEPTH - Add specific technologies:
+   - Frameworks, libraries, tools
+   - Cloud services (AWS, GCP, Azure)
+   - Methodologies (Agile, Scrum, CI/CD)
+   - Best practices (TDD, microservices, scalability)
+
+6. SENIOR POSITIONING - Write as if for:
+   - Senior/Staff/Principal level
+   - Team leadership and mentoring
+   - Cross-functional collaboration
+   - Strategic decision making
+
+EXAMPLE TRANSFORMATIONS:
+❌ "Developed web applications using React"
+✅ "Architected and delivered 8+ enterprise-grade React applications serving 100,000+ daily active users, implementing code-splitting and lazy loading to achieve 40% faster page loads and 99.9% uptime"
+
+❌ "Worked with team to fix bugs"  
+✅ "Spearheaded quality initiatives across a 15-person engineering team, implementing automated testing pipelines that reduced production bugs by 65% and accelerated release cycles by 3x"
+
+❌ "Built APIs for the product"
+✅ "Engineered scalable RESTful and GraphQL APIs handling 1M+ daily requests, leveraging Redis caching and database optimization to achieve sub-100ms response times and 99.99% availability"
+
+RESPONSE FORMAT (JSON):
 {
-  "improved": "<the improved text>",
+  "improved": "<DRAMATICALLY transformed text - 3x longer with metrics and keywords>",
   "changes": [
-    "<specific change 1>",
-    "<specific change 2>"
+    "<major improvement 1>",
+    "<major improvement 2>",
+    "<major improvement 3>",
+    "<major improvement 4>",
+    "<major improvement 5>"
   ],
-  "addedKeywords": ["<keyword1>", "<keyword2>"],
-  "improvementScore": <number showing improvement percentage 0-100>
+  "addedKeywords": ["<all keywords you added>"],
+  "improvementScore": <number between 50-95 - AIM FOR 90+>
 }
 
-IMPORTANT: The improved text must be a direct enhancement of the original - same facts, better presentation.`;
+⚡ YOUR GOAL: Transform mediocre content into ELITE, interview-winning material. 
+The improvement score MUST be 50+ minimum. Aim for 90+.
+This resume should make recruiters IMMEDIATELY want to call this candidate.`;
 }
 
 /**

@@ -12,9 +12,9 @@ export const maxDuration = 60;
 export async function POST(request: NextRequest): Promise<NextResponse<ImprovementResponse>> {
   try {
     // Check for API key
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'AI service not configured. Please add GEMINI_API_KEY to environment variables. Get a free key at https://aistudio.google.com/apikey' },
+        { success: false, error: 'AI service not configured. Please add GROQ_API_KEY to environment variables. Get a free key at https://console.groq.com/keys' },
         { status: 500 }
       );
     }
@@ -78,18 +78,30 @@ export async function POST(request: NextRequest): Promise<NextResponse<Improveme
           { status: 400 }
         );
       }
-      if (errorMessage.includes('api key') || errorMessage.includes('api_key') || errorMessage.includes('invalid')) {
+      if (errorMessage.includes('api key') || errorMessage.includes('api_key') || errorMessage.includes('invalid') || errorMessage.includes('authentication')) {
         return NextResponse.json(
-          { success: false, error: 'Invalid API key configuration.' },
+          { success: false, error: 'Invalid API key configuration. Please check your GROQ_API_KEY.' },
           { status: 401 }
         );
       }
       if (errorMessage.includes('429') || errorMessage.includes('quota') || errorMessage.includes('rate') || errorMessage.includes('resource_exhausted')) {
         return NextResponse.json(
-          { success: false, error: 'Rate limit exceeded. The free tier allows 15 requests per minute. Please wait a moment and try again.' },
+          { success: false, error: 'Rate limit exceeded. Please wait a moment and try again.' },
           { status: 429 }
         );
       }
+      if (errorMessage.includes('no valid json')) {
+        return NextResponse.json(
+          { success: false, error: 'AI response parsing failed. Please try again.' },
+          { status: 500 }
+        );
+      }
+      
+      // Return the actual error message for debugging
+      return NextResponse.json(
+        { success: false, error: `Improvement failed: ${error.message}` },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(

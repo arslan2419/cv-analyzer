@@ -34,27 +34,49 @@ export function parseJobDescriptionText(rawText: string): ParsedJobDescription {
 function extractJobTitle(rawText: string): string {
   const lines = rawText.split('\n').map((l) => l.trim()).filter(Boolean);
   
-  // Common title patterns
+  // Common title patterns - expanded
   const titlePatterns = [
     /(?:job\s+)?title[:\s]+([^\n]+)/i,
     /(?:position|role)[:\s]+([^\n]+)/i,
     /hiring\s+(?:a\s+)?([^\n]+)/i,
+    /looking\s+for\s+(?:a\s+)?([^\n]+)/i,
+    /seeking\s+(?:a\s+)?([^\n]+)/i,
+    /we\s+are\s+hiring\s+(?:a\s+)?([^\n]+)/i,
+    /join\s+(?:us\s+)?as\s+(?:a\s+)?([^\n]+)/i,
   ];
   
   for (const pattern of titlePatterns) {
     const match = rawText.match(pattern);
     if (match?.[1]) {
-      return match[1].trim();
+      const title = match[1].trim();
+      // Clean up common suffixes
+      return title.replace(/\s*[-–—]\s*.*$/, '').trim();
     }
   }
   
-  // Often the first line is the title
-  const firstLine = lines[0];
-  if (firstLine && firstLine.length < 100 && !firstLine.toLowerCase().includes('about')) {
-    // Check if it looks like a job title
-    if (firstLine.match(/engineer|developer|manager|analyst|designer|architect|lead|director|specialist|coordinator/i)) {
-      return firstLine;
+  // Job title keywords to look for
+  const titleKeywords = /(?:senior\s+|junior\s+|lead\s+|staff\s+|principal\s+)?(?:software\s+|web\s+|frontend\s+|front-end\s+|backend\s+|back-end\s+|full[\s-]?stack\s+|mobile\s+|ios\s+|android\s+|devops\s+|cloud\s+|data\s+|ml\s+|ai\s+)?(?:engineer|developer|architect|manager|analyst|designer|specialist|consultant|coordinator|director|lead|administrator|scientist)/i;
+  
+  // Check first 5 lines for a job title
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const line = lines[i];
+    if (line && line.length < 100 && !line.toLowerCase().includes('about')) {
+      const match = line.match(titleKeywords);
+      if (match) {
+        // Return the whole line if it's short enough and contains a title keyword
+        if (line.length < 60) {
+          return line;
+        }
+        // Otherwise return just the matched part
+        return match[0];
+      }
     }
+  }
+  
+  // Last resort: return first non-empty line if it's short
+  const firstLine = lines[0];
+  if (firstLine && firstLine.length < 80 && firstLine.length > 5) {
+    return firstLine;
   }
   
   return 'Position';
