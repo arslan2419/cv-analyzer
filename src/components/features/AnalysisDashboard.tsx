@@ -4,7 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Target, TrendingUp, AlertTriangle, CheckCircle, XCircle,
-  Zap, FileSearch, BarChart3, Lightbulb, ArrowRight, ChevronRight, Clock
+  Zap, FileSearch, BarChart3, Lightbulb, ArrowRight, ChevronRight
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import {
@@ -20,19 +20,7 @@ export function AnalysisDashboard() {
   } = useAppStore();
   
   const [hasStartedAnalysis, setHasStartedAnalysis] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [isRateLimited, setIsRateLimited] = useState(false);
   const analysisAttemptRef = useRef(false);
-
-  // Cooldown timer
-  useEffect(() => {
-    if (cooldownSeconds > 0) {
-      const timer = setTimeout(() => setCooldownSeconds(cooldownSeconds - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (isRateLimited && cooldownSeconds === 0) {
-      setIsRateLimited(false);
-    }
-  }, [cooldownSeconds, isRateLimited]);
 
   useEffect(() => {
     // Only run analysis once when component mounts with valid data
@@ -44,12 +32,10 @@ export function AnalysisDashboard() {
 
   const runAnalysis = useCallback(async () => {
     if (!resume || !jd) return;
-    if (cooldownSeconds > 0) return;
 
     setHasStartedAnalysis(true);
     setIsAnalyzing(true);
     setError(null);
-    setIsRateLimited(false);
 
     try {
       const response = await fetch('/api/analyze', {
@@ -61,12 +47,6 @@ export function AnalysisDashboard() {
       const result = await response.json();
 
       if (!result.success) {
-        // Check if it's a rate limit error
-        if (response.status === 429 || result.error?.toLowerCase().includes('rate')) {
-          setIsRateLimited(true);
-          setCooldownSeconds(60); // 60 second cooldown
-          throw new Error('Rate limit reached. Please wait 60 seconds before trying again.');
-        }
         throw new Error(result.error || 'Analysis failed');
       }
 
@@ -76,10 +56,9 @@ export function AnalysisDashboard() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [resume, jd, cooldownSeconds, setAnalysis, setError, setIsAnalyzing]);
+  }, [resume, jd, setAnalysis, setError, setIsAnalyzing]);
 
   const handleRetry = () => {
-    if (cooldownSeconds > 0) return;
     analysisAttemptRef.current = false;
     setHasStartedAnalysis(false);
     runAnalysis();
@@ -100,37 +79,10 @@ export function AnalysisDashboard() {
   if (!analysis) {
     return (
       <Card className="text-center py-12">
-        {isRateLimited ? (
-          <>
-            <Clock className="w-12 h-12 text-accent-warning mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">Rate Limit Reached</h3>
-            <p className="text-foreground-muted mb-4 max-w-md mx-auto">
-              The AI service is temporarily limiting requests. This is normal for the free tier.
-            </p>
-            {cooldownSeconds > 0 ? (
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-accent-warning/10 rounded-full text-accent-warning">
-                  <Clock className="w-4 h-4" />
-                  <span>Please wait {cooldownSeconds} seconds</span>
-                </div>
-                <ProgressBar 
-                  value={((60 - cooldownSeconds) / 60) * 100} 
-                  label="" 
-                  showValue={false}
-                />
-              </div>
-            ) : (
-              <Button onClick={handleRetry}>Try Again</Button>
-            )}
-          </>
-        ) : (
-          <>
-            <AlertTriangle className="w-12 h-12 text-accent-danger mx-auto mb-4" />
-            <p className="text-foreground-muted mb-2">Unable to complete analysis</p>
-            {error && <p className="text-sm text-accent-danger mb-4">{error}</p>}
-            <Button onClick={handleRetry}>Try Again</Button>
-          </>
-        )}
+        <AlertTriangle className="w-12 h-12 text-accent-danger mx-auto mb-4" />
+        <p className="text-foreground-muted mb-2">Unable to complete analysis</p>
+        {error && <p className="text-sm text-accent-danger mb-4">{error}</p>}
+        <Button onClick={handleRetry}>Try Again</Button>
         <div className="mt-6">
           <Button variant="ghost" onClick={handleBack}>
             Back to Job Description
@@ -203,15 +155,15 @@ function AnalysisLoading() {
     <Card className="text-center py-16">
       <motion.div
         animate={{ rotate: 360 }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
         className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-accent-primary/20 border-t-accent-primary"
       />
       <h3 className="text-xl font-semibold text-foreground mb-2">
         Analyzing Your Resume
       </h3>
       <p className="text-foreground-muted max-w-md mx-auto">
-        Our AI is comparing your resume against the job requirements,
-        checking ATS compatibility, and identifying improvement opportunities...
+        Comparing your resume against the job requirements,
+        checking ATS compatibility, and identifying keyword matches...
       </p>
       <div className="mt-8 flex justify-center gap-2">
         {['Skills', 'Experience', 'Keywords', 'ATS'].map((item, i) => (
@@ -219,7 +171,7 @@ function AnalysisLoading() {
             key={item}
             initial={{ opacity: 0.3 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: i * 0.5, repeat: Infinity, repeatType: 'reverse' }}
+            transition={{ duration: 0.3, delay: i * 0.2, repeat: Infinity, repeatType: 'reverse' }}
             className="px-3 py-1 bg-background-tertiary rounded-full text-sm text-foreground-muted"
           >
             {item}

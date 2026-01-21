@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, RefreshCw, Copy, Check, ArrowLeft, ArrowRight,
-  FileText, Briefcase, Code, Award, ChevronDown
+  FileText, Briefcase, Code, Award, ChevronDown, AlertTriangle, Clock, X
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import {
   Card, CardHeader, CardContent, Button, Badge, Select,
-  Tabs, TabsList, TabsTrigger, TabsContent
+  Tabs, TabsList, TabsTrigger, TabsContent, ProgressBar
 } from '@/components/ui';
 import type { ToneType, ImprovementSuggestion } from '@/types';
 
@@ -28,9 +28,22 @@ export function ResumeImprovement() {
 
   const [activeSection, setActiveSection] = useState<string>('summary');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [rateLimitError, setRateLimitError] = useState<boolean>(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldownSeconds > 0) {
+      const timer = setTimeout(() => setCooldownSeconds(cooldownSeconds - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (rateLimitError && cooldownSeconds === 0) {
+      setRateLimitError(false);
+    }
+  }, [cooldownSeconds, rateLimitError]);
 
   const handleImprove = async (section: 'summary' | 'experience' | 'projects' | 'skills') => {
     if (!resume || !analysis) return;
+    if (cooldownSeconds > 0) return;
 
     let textToImprove = '';
     
@@ -60,6 +73,7 @@ export function ResumeImprovement() {
 
     setIsImproving(true);
     setError(null);
+    setRateLimitError(false);
 
     try {
       const response = await fetch('/api/improve', {
@@ -76,15 +90,27 @@ export function ResumeImprovement() {
       const result = await response.json();
 
       if (!result.success) {
+        // Check if it's a rate limit error
+        if (response.status === 429 || result.error?.toLowerCase().includes('rate')) {
+          setRateLimitError(true);
+          setCooldownSeconds(60);
+          throw new Error('Rate limit exceeded');
+        }
         throw new Error(result.error || 'Improvement failed');
       }
 
       setImprovements([...improvements, ...result.data]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate improvements');
+      if (!rateLimitError) {
+        setError(err instanceof Error ? err.message : 'Failed to generate improvements');
+      }
     } finally {
       setIsImproving(false);
     }
+  };
+
+  const dismissRateLimitAlert = () => {
+    setRateLimitError(false);
   };
 
   const handleCopy = (text: string, id: string) => {
@@ -104,16 +130,75 @@ export function ResumeImprovement() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {/* Rate Limit Alert */}
+      <AnimatePresence>
+        {rateLimitError && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="relative p-4 bg-accent-warning/10 border border-accent-warning/30 rounded-xl"
+          >
+            <button
+              onClick={dismissRateLimitAlert}
+              className="absolute top-3 right-3 p-1 hover:bg-accent-warning/20 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4 text-accent-warning" />
+            </button>
+            
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-accent-warning/20 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-accent-warning" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-foreground mb-1">
+                  AI Rate Limit Reached
+                </h4>
+                <p className="text-sm text-foreground-muted mb-3">
+                  The free AI service has a limit of 15 requests per minute. 
+                  Please wait before generating more improvements.
+                </p>
+                
+                {cooldownSeconds > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-accent-warning" />
+                      <span className="text-sm font-medium text-accent-warning">
+                        Ready in {cooldownSeconds} seconds
+                      </span>
+                    </div>
+                    <div className="w-full max-w-xs">
+                      <ProgressBar 
+                        value={((60 - cooldownSeconds) / 60) * 100} 
+                        label="" 
+                        showValue={false}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-3 p-3 bg-background-tertiary/50 rounded-lg">
+                  <p className="text-xs text-foreground-muted">
+                    💡 <strong>Tip:</strong> The analysis step doesn&apos;t use AI, so you can analyze unlimited resumes. 
+                    AI is only used for generating improvement suggestions.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Controls */}
-      <Card variant="glass">
+      <Card variant="glass" className="relative z-20 overflow-visible">
         <CardHeader
           icon={<Sparkles className="w-5 h-5" />}
           title="AI Resume Improvement"
           description="Generate AI-powered improvements while preserving your facts"
         />
-        <CardContent>
+        <CardContent className="overflow-visible">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
-            <div className="flex-1 w-full md:w-auto">
+            <div className="flex-1 w-full md:w-auto relative z-30">
               <Select
                 label="Writing Tone"
                 options={TONE_OPTIONS}
@@ -126,9 +211,10 @@ export function ResumeImprovement() {
                 variant="secondary"
                 onClick={() => handleImprove(activeSection as 'summary' | 'experience' | 'projects' | 'skills')}
                 isLoading={isImproving}
-                leftIcon={<RefreshCw className="w-4 h-4" />}
+                disabled={cooldownSeconds > 0}
+                leftIcon={cooldownSeconds > 0 ? <Clock className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
               >
-                Generate Improvement
+                {cooldownSeconds > 0 ? `Wait ${cooldownSeconds}s` : 'Generate Improvement'}
               </Button>
             </div>
           </div>
@@ -136,7 +222,7 @@ export function ResumeImprovement() {
       </Card>
 
       {/* Section Tabs */}
-      <Card>
+      <Card className="relative z-10">
         <Tabs defaultValue="summary" value={activeSection} onValueChange={setActiveSection}>
           <TabsList className="mb-6">
             <TabsTrigger value="summary" icon={<FileText className="w-4 h-4" />}>
@@ -296,7 +382,7 @@ function SectionContent({ title, original, improvements, onCopy, copiedId }: Sec
               </pre>
 
               {/* Changes made */}
-              {improvement.changes.length > 0 && (
+              {improvement?.changes?.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <h5 className="text-xs font-semibold text-foreground-muted uppercase mb-2">
                     Changes Made
