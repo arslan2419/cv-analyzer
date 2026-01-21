@@ -53,7 +53,7 @@ export function PrivacyConsent({ onAccept, onDecline }: PrivacyConsentProps) {
               Your Privacy Matters
             </h2>
             <p className="text-foreground-muted">
-              Before we analyze your resume, here's how we protect your data.
+              Before we analyze your resume, here&apos;s how we protect your data.
             </p>
           </div>
 
@@ -155,7 +155,7 @@ export function PrivacyBanner() {
           <div className="flex items-center gap-3">
             <Shield className="w-6 h-6 text-accent-primary flex-shrink-0" />
             <p className="text-sm text-foreground-muted">
-              We process your resume securely and don't store any data without your consent.{' '}
+              We process your resume securely and don&apos;t store any data without your consent.{' '}
               <button
                 onClick={() => setShowDetails(!showDetails)}
                 className="text-accent-primary hover:underline"

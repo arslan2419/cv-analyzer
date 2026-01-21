@@ -538,7 +538,7 @@ export function analyzeResumeLocally(
   // Get all skills from JD
   const requiredSkillNames = jd.requiredSkills.map(s => s.skill.toLowerCase());
   const preferredSkillNames = jd.preferredSkills.map(s => s.skill.toLowerCase());
-  const allJdSkills = [...new Set([...requiredSkillNames, ...preferredSkillNames])];
+  const allJdSkills = Array.from(new Set([...requiredSkillNames, ...preferredSkillNames]));
 
   // Analyze skill matches
   const skillMatches = allJdSkills.map(skill => {
@@ -591,6 +591,7 @@ export function analyzeResumeLocally(
     suggestions: countKeyword(resumeText, keyword) === 0
       ? [`Consider adding "${keyword}" to your resume if applicable`]
       : [],
+    locations: [],
   }));
 
   // Find keyword gaps (in JD but not in resume)

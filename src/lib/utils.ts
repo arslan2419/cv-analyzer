@@ -175,10 +175,12 @@ export function extractKeywords(text: string): string[] {
 export function calculateSimilarity(text1: string, text2: string): number {
   const words1 = new Set(text1.toLowerCase().split(/\s+/));
   const words2 = new Set(text2.toLowerCase().split(/\s+/));
-  
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
-  const union = new Set([...words1, ...words2]);
-  
+
+  const words1Arr = Array.from(words1);
+  const words2Arr = Array.from(words2);
+  const intersection = new Set(words1Arr.filter(x => words2.has(x)));
+  const union = new Set(words1Arr.concat(words2Arr));
+
   return intersection.size / union.size;
 }
 

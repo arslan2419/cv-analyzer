@@ -417,7 +417,7 @@ function SectionContent({ title, original, improvements, onCopy, copiedId }: Sec
           <Sparkles className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
           <h4 className="font-semibold text-foreground mb-2">No improvements yet</h4>
           <p className="text-sm text-foreground-muted">
-            Click "Generate Improvement" to get AI-powered suggestions for this section.
+            Click &quot;Generate Improvement&quot; to get AI-powered suggestions for this section.
           </p>
         </div>
       )}

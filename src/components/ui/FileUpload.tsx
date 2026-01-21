@@ -77,44 +77,47 @@ export function FileUpload({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            {...getRootProps()}
-            className={cn(
-              'dropzone p-8 text-center',
-              isDragActive && 'dropzone-active'
-            )}
           >
-            <input {...getInputProps()} />
-            <motion.div
-              animate={{ y: isDragActive ? -5 : 0 }}
-              className="flex flex-col items-center gap-4"
+            <div
+              {...getRootProps()}
+              className={cn(
+                'dropzone p-8 text-center',
+                isDragActive && 'dropzone-active'
+              )}
             >
-              <div
-                className={cn(
-                  'w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300',
-                  isDragActive
-                    ? 'bg-accent-primary/20 text-accent-primary'
-                    : 'bg-background-tertiary text-foreground-muted'
-                )}
+              <input {...getInputProps()} />
+              <motion.div
+                animate={{ y: isDragActive ? -5 : 0 }}
+                className="flex flex-col items-center gap-4"
               >
-                <Upload className="w-8 h-8" />
-              </div>
-              <div>
-                <p className="text-lg font-medium text-foreground mb-1">{label}</p>
-                <p className="text-sm text-foreground-muted">{description}</p>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-foreground-subtle">
-                <span className="px-2 py-1 bg-background-tertiary rounded">PDF</span>
-                <span className="px-2 py-1 bg-background-tertiary rounded">DOCX</span>
-                <span>Max {formatFileSize(maxSize)}</span>
-              </div>
-            </motion.div>
-            {fileRejectionError && (
-              <p className="mt-4 text-sm text-accent-danger">
-                {fileRejectionError.code === 'file-too-large'
-                  ? `File is too large. Maximum size is ${formatFileSize(maxSize)}`
-                  : fileRejectionError.message}
-              </p>
-            )}
+                <div
+                  className={cn(
+                    'w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300',
+                    isDragActive
+                      ? 'bg-accent-primary/20 text-accent-primary'
+                      : 'bg-background-tertiary text-foreground-muted'
+                  )}
+                >
+                  <Upload className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium text-foreground mb-1">{label}</p>
+                  <p className="text-sm text-foreground-muted">{description}</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-foreground-subtle">
+                  <span className="px-2 py-1 bg-background-tertiary rounded">PDF</span>
+                  <span className="px-2 py-1 bg-background-tertiary rounded">DOCX</span>
+                  <span>Max {formatFileSize(maxSize)}</span>
+                </div>
+              </motion.div>
+              {fileRejectionError && (
+                <p className="mt-4 text-sm text-accent-danger">
+                  {fileRejectionError.code === 'file-too-large'
+                    ? `File is too large. Maximum size is ${formatFileSize(maxSize)}`
+                    : fileRejectionError.message}
+                </p>
+              )}
+            </div>
           </motion.div>
         ) : (
           <motion.div
