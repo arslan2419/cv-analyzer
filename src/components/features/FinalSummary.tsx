@@ -25,14 +25,7 @@ import { saveAs } from 'file-saver';
 export function FinalSummary() { 
   const { resume, jd, analysis, improvements, resetSession, setStep } = useAppStore();
   const [isExporting, setIsExporting] = useState(false);
-  const [isIntegrating, setIsIntegrating] = useState(false);
-
-  // console.log('FinalSummary Hook Phase Started', {
-    hasResume: !!resume,
-    hasJD: !!jd,
-    hasAnalysis: !!analysis,
-    improvementsCount: improvements?.length
-  });
+  const [isIntegrating, setIsIntegrating] = useState(false);  
 
   const handleStartOver = () => {
     resetSession();

@@ -54,7 +54,7 @@ export const DisclaimerModal: React.FC = () => {
                 </ul>
                 
                 <p className="pt-4 text-sm text-slate-400 italic">
-                  By clicking "I Understand", you acknowledge these limitations and agree to use the analysis responsibly.
+                  By clicking &quot;I Understand&quot;, you acknowledge these limitations and agree to use the analysis responsibly.
                 </p>
               </div>
               
