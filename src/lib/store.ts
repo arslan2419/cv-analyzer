@@ -171,11 +171,13 @@ export const useHistoryStore = create<HistoryStore>()(
 // ============================================================================
 interface PrivacyStore {
   hasConsented: boolean;
+  hasAcceptedDisclaimer: boolean;
   storeData: boolean;
   analyticsEnabled: boolean;
   sessionOnly: boolean;
 
   setConsent: (consented: boolean) => void;
+  setHasAcceptedDisclaimer: (accepted: boolean) => void;
   setStoreData: (store: boolean) => void;
   setAnalyticsEnabled: (enabled: boolean) => void;
   setSessionOnly: (sessionOnly: boolean) => void;
@@ -186,11 +188,13 @@ export const usePrivacyStore = create<PrivacyStore>()(
   persist(
     (set) => ({
       hasConsented: false,
+      hasAcceptedDisclaimer: false,
       storeData: false,
       analyticsEnabled: false,
       sessionOnly: true,
 
       setConsent: (hasConsented) => set({ hasConsented }),
+      setHasAcceptedDisclaimer: (hasAcceptedDisclaimer) => set({ hasAcceptedDisclaimer }),
       setStoreData: (storeData) => set({ storeData }),
       setAnalyticsEnabled: (analyticsEnabled) => set({ analyticsEnabled }),
       setSessionOnly: (sessionOnly) => set({ sessionOnly }),

@@ -9,30 +9,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Sophisticated dark theme palette
+        // Sophisticated theme palette using CSS variables
         background: {
-          DEFAULT: '#0a0a0f',
-          secondary: '#12121a',
-          tertiary: '#1a1a25',
-          elevated: '#22222f',
+          DEFAULT: 'rgb(var(--background) / <alpha-value>)',
+          secondary: 'rgb(var(--background-secondary) / <alpha-value>)',
+          tertiary: 'rgb(var(--background-tertiary) / <alpha-value>)',
+          elevated: 'rgb(var(--background-elevated) / <alpha-value>)',
         },
         foreground: {
-          DEFAULT: '#fafafa',
-          muted: '#a0a0b0',
-          subtle: '#6b6b7b',
+          DEFAULT: 'rgb(var(--foreground) / <alpha-value>)',
+          muted: 'rgb(var(--foreground-muted) / <alpha-value>)',
+          subtle: 'rgb(var(--foreground-subtle) / <alpha-value>)',
         },
         accent: {
-          primary: '#6366f1', // Indigo
-          secondary: '#8b5cf6', // Violet
-          success: '#10b981', // Emerald
-          warning: '#f59e0b', // Amber
-          danger: '#ef4444', // Red
-          info: '#06b6d4', // Cyan
+          primary: 'rgb(var(--accent-primary) / <alpha-value>)',
+          secondary: 'rgb(var(--accent-secondary) / <alpha-value>)',
+          success: 'rgb(var(--accent-success) / <alpha-value>)',
+          warning: 'rgb(var(--accent-warning) / <alpha-value>)',
+          danger: 'rgb(var(--accent-danger) / <alpha-value>)',
+          info: 'rgb(var(--accent-info) / <alpha-value>)',
         },
         border: {
-          DEFAULT: '#2a2a3a',
-          muted: '#1f1f2f',
-          accent: '#3b3b4f',
+          DEFAULT: 'rgb(var(--border) / <alpha-value>)',
+          muted: 'rgb(var(--border-muted) / <alpha-value>)',
+          accent: 'rgb(var(--border-accent) / <alpha-value>)',
         },
       },
       fontFamily: {
@@ -102,4 +102,3 @@ const config: Config = {
 };
 
 export default config;
-

@@ -45,10 +45,10 @@ const TECH_KEYWORDS = new Set([
  * Extract meaningful keywords from text
  */
 function extractKeywords(text: string): string[] {
-  // Normalize text
+  // Normalize text - keep numbers and common tech symbols (+, #, ., /)
   const normalized = text
     .toLowerCase()
-    .replace(/[^a-z0-9\s\+\#\.\-\/]/g, ' ')
+    .replace(/[^\w\s\+\#\.\-\/]/g, ' ') // Keep alphanumeric plus symbols
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -123,41 +123,55 @@ function skillExistsInResume(skill: string, resumeText: string, resumeSkills: st
   const normalizedSkill = skill.toLowerCase().trim();
   const normalizedResume = resumeText.toLowerCase();
 
-  // Direct match in text
-  if (normalizedResume.includes(normalizedSkill)) {
+  // 1. Direct match with word boundaries
+  const exactRegex = new RegExp(`\\b${normalizedSkill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+  if (exactRegex.test(normalizedResume)) {
     return true;
   }
 
-  // Check against parsed skills
-  for (const rs of resumeSkills) {
-    const normalizedRS = rs.toLowerCase();
-    if (normalizedRS.includes(normalizedSkill) || normalizedSkill.includes(normalizedRS)) {
-      return true;
+  // 2. Check against parsed skills (case-insensitive)
+  if (resumeSkills.some(rs => rs.toLowerCase() === normalizedSkill)) {
+    return true;
+  }
+
+  // 3. Common variations and synonyms
+  const synonymMap: Record<string, string[]> = {
+    'javascript': ['js', 'ecmascript', 'react', 'node'], // Looser match for tech stacks
+    'typescript': ['ts'],
+    'python': ['py', 'django', 'flask'],
+    'kubernetes': ['k8s', 'helm'],
+    'postgresql': ['postgres', 'psql', 'sql'],
+    'mongodb': ['mongo', 'nosql'],
+    'nodejs': ['node.js', 'node', 'express'],
+    'reactjs': ['react.js', 'react', 'next.js', 'nextjs'],
+    'vuejs': ['vue.js', 'vue', 'nuxt'],
+    'angularjs': ['angular.js', 'angular'],
+    'ci/cd': ['cicd', 'ci cd', 'continuous integration', 'jenkins', 'github actions', 'gitlab ci'],
+    'aws': ['amazon web services', 'ec2', 's3', 'lambda'],
+    'gcp': ['google cloud', 'bigquery', 'firebase'],
+    'azure': ['microsoft azure'],
+    'rest': ['restful', 'apis'],
+  };
+
+  // Check if our skill is a variation or contains a variation
+  for (const [key, alts] of Object.entries(synonymMap)) {
+    const isTarget = normalizedSkill === key || alts.includes(normalizedSkill);
+    if (isTarget) {
+      // If we found a high-level skill, check if any of its alts or the key is in the resume
+      if (exactRegex.test(normalizedResume)) return true; // Already checked, but for completeness
+      if (new RegExp(`\\b${key}\\b`, 'i').test(normalizedResume)) return true;
+      for (const alt of alts) {
+        if (new RegExp(`\\b${alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(normalizedResume)) {
+          return true;
+        }
+      }
     }
   }
 
-  // Common variations
-  const variations: Record<string, string[]> = {
-    'javascript': ['js', 'ecmascript'],
-    'typescript': ['ts'],
-    'python': ['py'],
-    'kubernetes': ['k8s'],
-    'postgresql': ['postgres', 'psql'],
-    'mongodb': ['mongo'],
-    'nodejs': ['node.js', 'node'],
-    'reactjs': ['react.js', 'react'],
-    'vuejs': ['vue.js', 'vue'],
-    'angularjs': ['angular.js', 'angular'],
-    'ci/cd': ['cicd', 'ci cd', 'continuous integration'],
-  };
-
-  // Check variations
-  for (const [key, alts] of Object.entries(variations)) {
-    if (normalizedSkill === key || alts.includes(normalizedSkill)) {
-      if (normalizedResume.includes(key) || alts.some(alt => normalizedResume.includes(alt))) {
-        return true;
-      }
-    }
+  // 4. Fallback: Check if the skill is a substring of a larger word in the resume skills
+  // (e.g., "React" in "React.js")
+  if (resumeSkills.some(rs => rs.toLowerCase().includes(normalizedSkill))) {
+    return true;
   }
 
   return false;

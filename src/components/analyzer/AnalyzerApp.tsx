@@ -23,6 +23,7 @@ export function AnalyzerApp() {
   const { currentStep, setStep } = useAppStore();
 
   const renderStep = () => {
+    // console.log('AnalyzerApp renderStep currentStep:', currentStep);
     switch (currentStep) {
       case 0:
         return <ResumeUpload />;
@@ -33,6 +34,7 @@ export function AnalyzerApp() {
       case 3:
         return <ResumeImprovement />;
       case 4:
+        // console.log('AnalyzerApp: returning <FinalSummary />');
         return <FinalSummary />;
       default:
         return <ResumeUpload />;
@@ -61,7 +63,7 @@ export function AnalyzerApp() {
       </div>
 
       {/* Step Content */}
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={currentStep}
           initial={{ opacity: 0, x: 20 }}

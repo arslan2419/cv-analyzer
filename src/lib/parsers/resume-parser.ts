@@ -351,50 +351,71 @@ function extractProjects(rawText: string): Project[] {
   const projects: Project[] = [];
   
   // Find projects section
-  const projPattern = /projects?[:\s]*\n([\s\S]*?)(?=\n\s*(?:experience|education|skills|certifications|work|$))/i;
+  const projPattern = /projects?[:\s]*\n([\s\S]*?)(?=\n\s*(?:experience|education|skills|certifications|work|languages|hobbies|$))/i;
   const projMatch = rawText.match(projPattern);
   
   if (!projMatch?.[1]) return projects;
   
   const projSection = projMatch[1];
-  const entries = projSection.split(/\n(?=[A-Z•▪►○●‣\-*])/);
+  
+  // Split projects more robustly
+  // Matches a newline followed by a capitalized word (the project name)
+  // that is NOT a common section sub-header like "Skills used" or "Technologies"
+  // followed by either a separator (- | :) or a URL/Location pattern
+  const entries = projSection.split(/\n(?=[A-Z](?!kills|echnologies|ech\s*stack|ools)[A-Za-z0-9\s]{1,40}(?:\s*[-–—|:]\s*|\s*[\w-]+\.(?:com|net|org|io|ai|dev|me|dev)|$))/);
   
   for (const entry of entries) {
-    if (entry.trim().length < 20) continue;
+    const trimmedEntry = entry.trim();
+    if (trimmedEntry.length < 15) continue;
     
-    const lines = entry.split('\n').map((l) => l.trim()).filter(Boolean);
-    const name = lines[0]?.replace(/^[•▪►○●‣\-*]\s*/, '') || '';
+    const lines = trimmedEntry.split('\n').map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) continue;
+
+    // The first line is usually "Name - URL Location" or just "Name"
+    const headerLine = lines[0].replace(/^[•▪►○●‣\-*]\s*/, '');
+    const headerParts = headerLine.split(/\s*[-–—|]\s*/);
+    const name = headerParts[0].trim();
     
-    // Extract technologies mentioned
-    const techPattern = /(?:technologies?|tech\s*stack|built\s+with|using)[:\s]*([\w\s,]+)/i;
-    const techMatch = entry.match(techPattern);
+    // Extract technologies mentioned in the whole entry
+    const techPattern = /(?:technologies?|tech\s*stack|built\s+with|using|skills?|tools?)[:\s]*([\w\s,+.#|/()]+)/i;
+    const techMatch = trimmedEntry.match(techPattern);
     
     let technologies: string[] = [];
     if (techMatch?.[1]) {
-      technologies = techMatch[1].split(/[,|]/).map((t) => t.trim()).filter(Boolean);
+      technologies = techMatch[1].split(/[,|/]/).map((t) => t.trim()).filter(Boolean);
+      // Limit to likely skill words (exclude full sentences)
+      technologies = technologies.filter(t => t.split(' ').length <= 3);
     }
     
     // Extract URLs
     const githubPattern = /github\.com\/[\w-]+\/[\w-]+/i;
-    const urlPattern = /https?:\/\/[^\s]+/i;
+    const urlPattern = /https?:\/\/[^\s]+|[\w-]+\.(?:com|net|org|io|ai|dev)/i;
     
-    const github = entry.match(githubPattern)?.[0];
-    const url = entry.match(urlPattern)?.[0];
+    const github = trimmedEntry.match(githubPattern)?.[0];
+    const urlMatch = trimmedEntry.match(urlPattern);
+    const url = urlMatch?.[0];
     
-    // Description is usually the rest
-    const description = lines.slice(1)
-      .map((l) => l.replace(/^[•▪►○●‣\-*]\s*/, '').trim())
-      .filter((l) => l.length > 10)
-      .join(' ');
+    // Description is the rest of the lines
+    const descriptionLines: string[] = [];
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        // Skip tech stack line in description
+        if (techMatch && line.includes(techMatch[0].trim())) continue;
+        
+        const cleanLine = line.replace(/^[•▪►○●‣\-*]\s*/, '').trim();
+        if (cleanLine.length > 5) {
+            descriptionLines.push(cleanLine);
+        }
+    }
     
-    if (name) {
+    if (name && name.length > 1) {
       projects.push({
         id: generateId(),
         name,
-        description,
+        description: descriptionLines.join('\n'), // Keep as multi-line for better export control
         technologies,
         github,
-        url: url !== github ? url : undefined,
+        url: url && (url !== github) ? url : undefined,
       });
     }
   }

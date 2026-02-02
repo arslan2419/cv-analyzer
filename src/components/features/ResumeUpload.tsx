@@ -137,14 +137,14 @@ function ResumePreview({ resume, isEditing }: ResumePreviewProps) {
               {resume.contact.phone || 'Not detected'}
             </span>
           </div>
-          {resume.contact.location && (
+          {/* {resume.contact.location && (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-foreground-muted">Location:</span>
               <span className="text-foreground font-medium">
                 {resume.contact.location}
               </span>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
