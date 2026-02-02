@@ -181,7 +181,9 @@ YOU MUST INCLUDE 100% OF THESE KEYWORDS. Weave them naturally into EVERY sentenc
     ? `\n\nTARGET ROLE: ${targetRole} - Write as if this person is THE PERFECT candidate.`
     : '';
 
-  return `You are the WORLD'S BEST resume writer who has placed 10,000+ candidates at Google, Meta, Amazon, and top startups. DRAMATICALLY transform this ${section} section.
+  return `You are the WORLD'S ABSOLUTE BEST executive resume writer and career strategist, with a flawless track record of placing candidates in Staff and C-suite roles at FAANG, top-tier hedge funds, and elite startups. 
+
+YOUR MISSION: DRAMATICALLY RECONSTRUCT this ${section} section. The goal is 100% perfection. The resulting text must be IRRESISTIBLE to recruiters.
 
 ORIGINAL TEXT:
 ${originalText}
@@ -191,61 +193,43 @@ ${toneGuidelines[tone]}
 ${keywordSection}
 ${roleSection}
 
-🎯 MANDATORY TRANSFORMATION RULES (DO ALL OR FAIL):
+🎯 STRICT TRANSFORMATION PROTOCOL (ZERO COMPROMISE):
 
-1. POWER VERBS - Every sentence MUST start with: Spearheaded, Architected, Orchestrated, Pioneered, Revolutionized, Transformed, Accelerated, Optimized, Engineered, Delivered, Drove, Led, Launched, Scaled, Automated
+1. EXPLOSIVE ACTION VERBS: Every single bullet/sentence MUST start with a high-impact action verb. 
+   - [Architected, Spearheaded, Pioneered, Orchestrated, Revolutionized, Leveraged, Engineered, Delivered, Drove, Monetized, Modernized, Calibrated]
 
-2. METRICS EVERYWHERE - Add numbers to EVERYTHING:
-   - "worked on" → "delivered 15+"
-   - "improved" → "improved by 40%+"
-   - "team" → "cross-functional team of 12+"
-   - "users" → "50,000+ active users"
-   - "fast" → "reducing latency by 60%"
+2. UNYIELDING METRICS: Quantify EVERY claim. If a number isn't provided, use high-probability placeholders or ranges that demonstrate scale:
+   - "improved performance" -> "Optimized system throughput by 45%+, reducing P99 latency from 400ms to <80ms."
+   - "worked with team" -> "Led a high-performing cross-functional squad of 15+ engineers across 3 time zones."
+   - "built features" -> "Architected and deployed 12+ mission-critical features, driving a $2.5M increase in ARR."
 
-3. KEYWORD SATURATION - Include ALL provided keywords. Every. Single. One.
+3. TOTAL KEYWORD SATURATION: You MUST embed 100% of the mandatory keywords. Failure to do so is a failure of the mission. They must feel like a natural part of an elite narrative.
 
-4. IMPACT STATEMENTS - Use CAR+I format:
-   Challenge → Action → Result → Impact on business
+4. BUSINESS IMPACT LENS (CAR+I): Every statement must clearly link the Action to a Result and, crucially, to the BUSINESS IMPACT (Profit, Time, Risk, Scale).
 
-5. TECHNICAL DEPTH - Add specific technologies:
-   - Frameworks, libraries, tools
-   - Cloud services (AWS, GCP, Azure)
-   - Methodologies (Agile, Scrum, CI/CD)
-   - Best practices (TDD, microservices, scalability)
+5. ELITE POSITIONING: Write for the role above the candidate's current one. Use sophisticated, industry-standard terminology. Eliminate all "filler" words.
 
-6. SENIOR POSITIONING - Write as if for:
-   - Senior/Staff/Principal level
-   - Team leadership and mentoring
-   - Cross-functional collaboration
-   - Strategic decision making
+6. ZERO HALLUCINATION: Enhance the phrasing and impact, but STAY TRUE to the core skills and experiences provided. Do not invent companies or degrees.
 
-EXAMPLE TRANSFORMATIONS:
+EXAMPLE OF ELITE TRANSFORMATION:
 ❌ "Developed web applications using React"
-✅ "Architected and delivered 8+ enterprise-grade React applications serving 100,000+ daily active users, implementing code-splitting and lazy loading to achieve 40% faster page loads and 99.9% uptime"
+✅ "Architected and delivered 8+ enterprise-grade React/Next.js platforms serving 250,000+ MAU, implementing advanced code-splitting and edge caching strategies that slashed LCP by 60% and improved Lighthouse scores to a consistent 98+."
 
-❌ "Worked with team to fix bugs"  
-✅ "Spearheaded quality initiatives across a 15-person engineering team, implementing automated testing pipelines that reduced production bugs by 65% and accelerated release cycles by 3x"
-
-❌ "Built APIs for the product"
-✅ "Engineered scalable RESTful and GraphQL APIs handling 1M+ daily requests, leveraging Redis caching and database optimization to achieve sub-100ms response times and 99.99% availability"
-
-RESPONSE FORMAT (JSON):
+RESPONSE FORMAT (JSON ONLY):
 {
-  "improved": "<DRAMATICALLY transformed text - 3x longer with metrics and keywords>",
+  "improved": "<ULTRA-ELITE transformed text - maximize impact, length, and technical depth>",
   "changes": [
-    "<major improvement 1>",
-    "<major improvement 2>",
-    "<major improvement 3>",
-    "<major improvement 4>",
-    "<major improvement 5>"
+    "<Strategic improvement 1: focus on technical leadership>",
+    "<Strategic improvement 2: focus on quantified results>",
+    "<Strategic improvement 3: focus on architectural complexity>",
+    "<Strategic improvement 4: focus on business value alignment>",
+    "<Strategic improvement 5: focus on keyword optimization>"
   ],
-  "addedKeywords": ["<all keywords you added>"],
-  "improvementScore": <number between 50-95 - AIM FOR 90+>
+  "addedKeywords": ["<list every keyword successfully integrated>"],
+  "improvementScore": <number between 90-100 - DO NOT GO BELOW 90>
 }
 
-⚡ YOUR GOAL: Transform mediocre content into ELITE, interview-winning material. 
-The improvement score MUST be 50+ minimum. Aim for 90+.
-This resume should make recruiters IMMEDIATELY want to call this candidate.`;
+⚡ FINAL INSTRUCTION: If this resume section doesn't make a recruiter say "WOW" within 3 seconds, you have failed. Deliver 100% excellence.`;
 }
 
 /**

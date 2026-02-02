@@ -6,12 +6,13 @@ import {
   Target, TrendingUp, AlertTriangle, CheckCircle, XCircle,
   Zap, FileSearch, BarChart3, Lightbulb, ArrowRight, ChevronRight
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, usePrivacyStore } from '@/lib/store';
 import {
   Card, CardHeader, CardContent, Button, ScoreCircle,
   ProgressBar, Badge, SkillBadge, Tabs, TabsList, TabsTrigger, TabsContent
 } from '@/components/ui';
 import type { AnalysisResult } from '@/types';
+import { DisclaimerModal } from './DisclaimerModal';
 
 export function AnalysisDashboard() {
   const {
@@ -28,6 +29,9 @@ export function AnalysisDashboard() {
     setHasStartedAnalysis(true);
     setIsAnalyzing(true);
     setError(null);
+    
+    // Reset disclaimer so it shows when result appears
+    usePrivacyStore.getState().setHasAcceptedDisclaimer(false);
 
     try {
       const response = await fetch('/api/analyze', {
@@ -146,6 +150,8 @@ export function AnalysisDashboard() {
           Improve Resume
         </Button>
       </div>
+
+      <DisclaimerModal />
     </motion.div>
   );
 }
@@ -215,6 +221,15 @@ function ScoreOverview({ analysis }: { analysis: AnalysisResult }) {
         <Card className="flex flex-col items-center justify-center py-6">
           <ScoreCircle score={analysis.atsScore} size="md" />
           <span className="mt-3 text-sm font-medium text-foreground">ATS Score</span>
+          <div className={`mt-2 text-xs font-bold px-2 py-0.5 rounded-full ${
+            analysis.atsScore >= 80 
+              ? 'bg-accent-success/20 text-accent-success' 
+              : analysis.atsScore >= 60 
+              ? 'bg-accent-warning/20 text-accent-warning' 
+              : 'bg-accent-danger/20 text-accent-danger'
+          }`}>
+            {analysis.atsScore >= 80 ? 'GOOD' : analysis.atsScore >= 60 ? 'AVERAGE' : 'BAD / NEEDS IMPROVEMENT'}
+          </div>
         </Card>
       </div>
     </div>
@@ -240,7 +255,7 @@ function SkillsAnalysis({ analysis }: { analysis: AnalysisResult }) {
         </div>
         <div className="p-4 bg-accent-danger/10 rounded-lg text-center">
           <div className="text-2xl font-bold text-accent-danger">{missingSkills.length}</div>
-          <div className="text-sm text-foreground-muted">Missing</div>
+          <div className="text-sm text-foreground-muted">Missing Keywords</div>
         </div>
       </div>
 
@@ -279,12 +294,12 @@ function SkillsAnalysis({ analysis }: { analysis: AnalysisResult }) {
           </div>
         )}
 
-        {/* Missing Skills */}
+        {/* Missing Keywords */}
         {missingSkills.length > 0 && (
           <div className="p-4 bg-background-tertiary rounded-lg">
             <div className="flex items-center gap-2 mb-3">
               <XCircle className="w-5 h-5 text-accent-danger" />
-              <h4 className="font-semibold text-foreground">Missing Skills</h4>
+              <h4 className="font-semibold text-foreground">Missing Keywords</h4>
             </div>
             <div className="flex flex-wrap gap-2">
               {missingSkills.map((skill, i) => (
